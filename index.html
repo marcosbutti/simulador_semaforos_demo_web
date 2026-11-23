@@ -342,6 +342,12 @@
           <button class="chip" type="button" data-speed="5">5x</button>
           <button class="chip" type="button" data-speed="10">10x</button>
         </div>
+        <div class="group" role="group" aria-label="Cantidad de semáforos" id="semGroup">
+          <span class="group-label">Semáforos</span>
+          <button class="chip" type="button" id="semMinus" aria-label="Quitar el último semáforo">−</button>
+          <span class="count" id="semN">2</span>
+          <button class="chip" type="button" id="semPlus" aria-label="Agregar un semáforo">+</button>
+        </div>
         <div class="group" role="group" aria-label="Cantidad de autos">
           <span class="group-label">Autos</span>
           <button class="chip" type="button" id="carsMinus" aria-label="Quitar un auto">−</button>
@@ -470,10 +476,13 @@
 
   const MIN_SEM = 2, MAX_SEM = 6, MIN_CARS = 1, MAX_CARS = 10;
   const LIM_GREEN = [5, 90], LIM_RED = [5, 90];
-  const ACCENTS = ['#81c8ff', '#ffb482', '#c4b5fd', '#86efac', '#f9a8d4', '#5eead4'];
+  // Colores de identificación: a propósito NINGUNO parecido a las luces
+  // (rojo, amarillo/naranja, verde), para no confundirse con el semáforo.
+  // Celeste, fucsia, lavanda, azul, gris e índigo.
+  const ACCENTS = ['#7dd3fc', '#f0abfc', '#c4b5fd', '#3b82f6', '#94a3b8', '#818cf8'];
   const LIGHT = { G: '#22c55e', Y: '#f59e0b', R: '#ef4444' };
   const TOOTH_EDGE = { G: '#15803d', Y: '#b45309', R: '#b91c1c', K: '#94a3b8' };
-  const CAR_COLORS = ['#60a5fa', '#f472b6', '#a78bfa', '#22d3ee', '#fb923c', '#e2e8f0', '#818cf8', '#2dd4bf', '#c084fc', '#94a3b8'];
+  const CAR_COLORS = ['#60a5fa', '#f0abfc', '#a78bfa', '#22d3ee', '#e2e8f0', '#818cf8', '#e879f9', '#cbd5e1', '#c084fc', '#94a3b8'];
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   const toInt = (v, d) => (v !== null && v !== undefined && String(v).trim() !== '' && Number.isFinite(Number(v)) ? Math.round(Number(v)) : d);
   const ALL = ['green', 'red', 'delay'];
@@ -1190,19 +1199,28 @@
     });
     st.hl = -1;
 
-    if (free && st.sems.length < MAX_SEM) {
-      const add = document.createElement('button');
-      add.type = 'button';
-      add.className = 'add-card';
-      add.innerHTML = '<span class="plus">+</span><span>Agregar semáforo</span>';
-      add.addEventListener('click', () => {
-        if (st.sems.length >= MAX_SEM) return;
-        st.sems.push({ green: 30, red: 30, delay: 0 });
-        renderCards(); rebuildGears(); scheduleUrl();
-      });
-      cardsEl.appendChild(add);
-    }
+    refreshSemUI();
   }
+
+  // Agregar/quitar semáforos: en la barra de herramientas (al lado de la
+  // velocidad y los autos), donde siempre se ve. Solo en modo libre.
+  function refreshSemUI() {
+    const n = st.sems.length, free = st.mode === 'free';
+    $('semGroup').hidden = !free;
+    $('semN').textContent = String(n);
+    $('semMinus').disabled = n <= MIN_SEM;
+    $('semPlus').disabled = n >= MAX_SEM;
+  }
+  function setSemCount(n) {
+    if (st.mode !== 'free') return;
+    n = clamp(n, MIN_SEM, MAX_SEM);
+    if (n === st.sems.length) return;
+    while (st.sems.length < n) st.sems.push({ green: 30, red: 30, delay: 0 });
+    while (st.sems.length > n) st.sems.pop();
+    renderCards(); rebuildGears(); scheduleUrl();
+  }
+  $('semMinus').addEventListener('click', () => setSemCount(st.sems.length - 1));
+  $('semPlus').addEventListener('click', () => setSemCount(st.sems.length + 1));
 
   function refreshCard(i) {
     const c = st.sems[i], ref = cardRefs[i];
