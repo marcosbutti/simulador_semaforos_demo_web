@@ -670,8 +670,6 @@
   const canvas = document.getElementById('cv');
   const ctx = canvas.getContext('2d');
   const scene = document.getElementById('scene');
-  const bg = document.createElement('canvas');
-  const bgx = bg.getContext('2d');
   const H = 620, TOP_MARGIN = 112, BOTTOM_MARGIN = 50, ROAD = 118, SIDE = 36;
   const LAMP_W = 30, LAMP_H = 78, LAMP_Y = 14;
   const CAR_LEN = 46, CAR_SPEED = 70, STOP_BEFORE = 8, CAR_GAP = 12;
@@ -687,10 +685,10 @@
     dpr = window.devicePixelRatio || 1;
     const cssH = H * scale;
     canvas.style.height = cssH + 'px';
-    canvas.width = bg.width = Math.round(cssW * dpr);
-    canvas.height = bg.height = Math.round(cssH * dpr);
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
     layout();
-    paintBackground();
+    buildBackground();
   }
 
   function layout() {
@@ -799,18 +797,27 @@
     c.closePath();
   }
 
-  function paintBackground() {
-    const c = bgx;
-    c.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  // El fondo se pinta en CADA cuadro, directo en el canvas visible. Antes se
+  // cacheaba en un canvas aparte, pero en celulares el navegador puede
+  // vaciar ese canvas oculto (al cambiar de app, por memoria): quedaba
+  // transparente, ya no borraba el cuadro anterior y todo dejaba estela.
+  // La grilla de puntos va en un Path2D (no depende de ningún canvas).
+  let dotsPath = new Path2D();
+  function buildBackground() {
+    dotsPath = new Path2D();
+    for (let y = 14; y < H - ROAD; y += 26) {
+      for (let x = 14; x < W; x += 26) dotsPath.rect(x, y, 2, 2);
+    }
+  }
+
+  function paintBackground(c) {
     const grad = c.createLinearGradient(0, 0, 0, H);
     grad.addColorStop(0, '#111c33');
     grad.addColorStop(1, '#0c1527');
     c.fillStyle = grad;
     c.fillRect(0, 0, W, H);
     c.fillStyle = 'rgba(148, 163, 184, 0.09)';
-    for (let y = 14; y < H - ROAD; y += 26) {
-      for (let x = 14; x < W; x += 26) c.fillRect(x, y, 2, 2);
-    }
+    c.fill(dotsPath);
     // Calle
     const t = roadTop(), b = roadBot();
     c.fillStyle = '#0a1120';
@@ -967,8 +974,9 @@
 
   function draw(colors) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.drawImage(bg, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+    paintBackground(ctx);
     const pulse = st.running ? Math.abs(Math.sin(st.time * 3)) : 0;
     const hg = st.gears[st.hl];
     if (hg) {
