@@ -5,6 +5,8 @@
 **Cada semáforo es un engranaje. Cada diente, un segundo de luz.**<br>
 Desfasalos, sincronizalos y hacé que los autos crucen la avenida sin frenar.
 
+### [▶ Jugar online](https://marcosbutti.github.io/simulador_semaforos_demo_web/)
+
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black)
 ![Canvas](https://img.shields.io/badge/Canvas_2D-334155)
@@ -57,7 +59,7 @@ De 2 a 6 semáforos y de 1 a 10 autos, con verde, rojo y retraso ajustables en v
 ## 🚀 Probarla
 
 - 💻 **En tu compu:** descargá el repo y abrí `index.html` en el navegador. No hace falta instalar nada.
-- 🌐 **Online:** próximamente en GitHub Pages.
+- 🌐 **Online:** [marcosbutti.github.io/simulador_semaforos_demo_web](https://marcosbutti.github.io/simulador_semaforos_demo_web/)
 
 ## 🛠️ Detalles técnicos
 
