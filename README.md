@@ -11,7 +11,7 @@ Desfasalos, sincronizalos y hacé que los autos crucen la avenida sin frenar.
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black)
 ![Canvas](https://img.shields.io/badge/Canvas_2D-334155)
 ![Dependencias](https://img.shields.io/badge/dependencias-0-22c55e)
-![Versión](https://img.shields.io/badge/versión-1.0-818cf8)
+![Versión](https://img.shields.io/badge/versión-1.0.1-818cf8)
 ![Licencia MIT](https://img.shields.io/badge/licencia-MIT-94a3b8)
 
 <img src="docs/modo-libre.png" alt="Cuatro semáforos en onda verde: todos en verde y los autos cruzando sin frenar" width="860">
