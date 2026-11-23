@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Engranajes y semáforos</title>
+<title>La onda verde, con engranajes</title>
 <meta name="description" content="Demo jugable: cada semáforo es un engranaje y cada diente un segundo de luz. Superá los desafíos y armá una onda verde.">
 <meta property="og:title" content="La onda verde, con engranajes">
 <meta property="og:description" content="Cada semáforo es un engranaje y cada diente un segundo de luz. ¿Llegás al nivel 6?">
@@ -247,6 +247,20 @@
   .steps p { margin: 0; color: var(--muted); font-size: 14px; }
 
   footer { padding-block: 40px 36px; color: #6f809c; font-size: 13px; text-align: center; }
+  footer .signature { display: block; margin-top: 6px; font-size: 11.5px; color: #55657f; letter-spacing: .02em; }
+
+  /* Primera impresión: el botón Jugar late hasta que se usa por primera vez. */
+  .start-hint { font-size: 13px; font-weight: 600; color: #86efac; white-space: nowrap; }
+  .btn.primary.attn { animation: attn 1.6s ease-out infinite; }
+  @keyframes attn { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, .55); } 70%, 100% { box-shadow: 0 0 0 12px rgba(34, 197, 94, 0); } }
+  @media (prefers-reduced-motion: reduce) { .btn.primary.attn { animation: none; box-shadow: 0 0 0 3px rgba(34, 197, 94, .45); } }
+
+  .reset-progress {
+    font: inherit; font-size: 12px; color: var(--muted); background: none; border: 0;
+    padding: 4px 6px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; align-self: center;
+  }
+  .reset-progress:hover { color: var(--text); }
+  .reset-progress.confirm { color: #fca5a5; }
 
   /* ---------- Escena + panel de semáforos, siempre a la vista ---------- */
   .stage { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 12px; align-items: start; }
@@ -333,6 +347,7 @@
 
       <div class="toolbar">
         <button class="btn primary" id="play" type="button">▶ Jugar</button>
+        <span class="start-hint" id="startHint" hidden>← Tocá Jugar para empezar</span>
         <button class="btn" id="restart" type="button" title="Volver al segundo 0">↺ Reiniciar</button>
         <span class="spacer"></span>
         <div class="group" role="group" aria-label="Velocidad de reproducción">
@@ -374,7 +389,7 @@
       <div class="status" aria-live="polite">
         <div class="sync-pill" id="syncPill"><span class="led"></span><span id="syncText">Esperando la onda verde…</span></div>
         <div class="stat"><span class="k">Tiempo</span><span class="v" id="stTime">0:00</span></div>
-        <div class="stat"><span class="k">Todos en verde</span><span class="v" id="stSync">0 s · 0%</span></div>
+        <div class="stat"><span class="k">Todos en verde</span><span class="v" id="stSync">0 s · 0 %</span></div>
         <div class="stat"><span class="k" id="stStopsK">Frenadas</span><span class="v" id="stStops">0</span></div>
       </div>
       </div>
@@ -416,7 +431,10 @@
     </section>
   </main>
 
-  <footer>Versión demo de un simulador de sincronización de semáforos en desarrollo.</footer>
+  <footer>
+    Versión demo de un simulador de sincronización de semáforos en desarrollo.
+    <span class="signature">Marcos Butti · v1.0</span>
+  </footer>
 </div>
 
 <script>
@@ -484,6 +502,7 @@
   const TOOTH_EDGE = { G: '#15803d', Y: '#b45309', R: '#b91c1c', K: '#94a3b8' };
   const CAR_COLORS = ['#60a5fa', '#f0abfc', '#a78bfa', '#22d3ee', '#e2e8f0', '#818cf8', '#e879f9', '#cbd5e1', '#c084fc', '#94a3b8'];
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const dec = (x, n) => x.toFixed(n).replace('.', ',');   // decimales con coma, como se escriben en castellano
   const toInt = (v, d) => (v !== null && v !== undefined && String(v).trim() !== '' && Number.isFinite(Number(v)) ? Math.round(Number(v)) : d);
   const ALL = ['green', 'red', 'delay'];
   const TIMING = ['green', 'red'];
@@ -521,7 +540,7 @@
       title: 'Ritmos distintos',
       intro: 'El semáforo 2 tiene un ciclo más largo que el 1. Con el retraso solo, no alcanza.',
       goal: { type: 'sync', window: 372, stars: [40, 44, 48] },
-      goalText: 'Llegá al 40 % de tiempo con los dos en verde, durante 6 minutos.',
+      goalText: 'Lográ que estén los dos en verde a la vez al menos el 40 % del tiempo, durante 6 minutos.',
       sems: [{ green: 30, red: 30, delay: 0, lock: ALL }, { green: 45, red: 30, delay: 0, lock: [] }],
       cars: 2,
       hint: 'Mirá la duración del ciclo debajo de cada tarjeta. Si no son iguales, cualquier coincidencia se va corriendo con el tiempo.',
@@ -556,7 +575,7 @@
       minRed: 25,
       cars: 6,
       travel: true,
-      hint: 'Primero igualá los ciclos (verde + rojo + 2 de amarillo). Después ajustá los retrasos de izquierda a derecha, sumando los tiempos de viaje y redondeando para abajo. Si todos tienen el mismo verde no hay margen: dale un poco más de verde a cada semáforo que el anterior.',
+      hint: 'Primero igualá los ciclos (verde + rojo + 2 de amarillo). Después ajustá los retrasos de izquierda a derecha, sumando los tiempos de viaje y redondeando para abajo. Si todos tienen el mismo verde no hay margen: dale a cada semáforo un poco más de verde que al anterior.',
       lesson: 'En la realidad hay <b>restricciones</b>: la otra calle también necesita su verde. Coordinar es repartir bien el tiempo, no solo desfasar.',
     },
     {
@@ -762,7 +781,7 @@
   function travelTimes() {
     const gs = st.gears;
     const out = [];
-    for (let i = 0; i + 1 < gs.length; i++) out.push(`S${i + 1}→S${i + 2}: ${((gs[i + 1].cx - gs[i].cx) / CAR_SPEED).toFixed(1)} s`);
+    for (let i = 0; i + 1 < gs.length; i++) out.push(`S${i + 1}→S${i + 2}: ${dec((gs[i + 1].cx - gs[i].cx) / CAR_SPEED, 1)} s`);
     return out.join(' · ');
   }
 
@@ -909,7 +928,7 @@
     ctx.fillStyle = '#e6edf7';
     ctx.font = '600 12px Inter, system-ui, sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    const turns = (st.time / g.cycle).toFixed(1);
+    const turns = dec(st.time / g.cycle, 1);
     ctx.fillText(w >= 96 ? `${turns} vueltas` : turns, g.cx, y + h / 2 + 0.5);
     // Guía hasta su línea de "pare" en la calle
     ctx.setLineDash([2, 6]);
@@ -991,7 +1010,7 @@
     setText(hud.time, 'time', fmtTime(st.time));
     const ex = exactUpTo(Math.floor(st.time));
     const pct = ex.n > 0 ? Math.round((ex.sync / ex.n) * 100) : 0;
-    setText(hud.sync, 'sync', `${ex.sync} s · ${pct}%`);
+    setText(hud.sync, 'sync', `${ex.sync} s · ${pct} %`);
     const L = level();
     const afterOnly = L && L.goal.type === 'stops';
     setText(hud.stopsK, 'stopsK', afterOnly ? 'Frenadas tras S1' : 'Frenadas');
@@ -1042,7 +1061,7 @@
     if (win && stars > starsOf(i)) { st.progress.stars[i] = stars; saveProgress(); renderPicker(); }
     const g = L.goal;
     const valTxt = g.type === 'sync'
-      ? `Todos en verde: ${value.toFixed(1)} % (meta: ${g.stars[0]} %)`
+      ? `Todos en verde: ${dec(value, 1)} % (meta: ${g.stars[0]} %)`
       : `Frenadas después del semáforo 1: ${value} (máximo: ${g.stars[0]})`;
     ov.stars.innerHTML = win ? starsHTML(stars) : '';
     ov.title.textContent = win ? (stars === 3 ? '¡Perfecto!' : '¡Nivel superado!') : (g.type === 'stops' && st.time < g.window ? 'Demasiadas frenadas' : 'Casi…');
@@ -1093,7 +1112,13 @@
   // ---------- Controles generales ----------
   function setRunning(on) {
     if (on && st.result) rebuildGears();   // tras ganar/perder, Jugar arranca una prueba nueva
+    if (on) st.hasPlayed = true;
     st.running = on;
+    // Primera impresión: hasta que alguien toque Jugar por primera vez, el
+    // botón late y una flechita indica por dónde empezar.
+    const invite = !on && !st.hasPlayed;
+    playBtn.classList.toggle('attn', invite);
+    $('startHint').hidden = !invite;
     playBtn.textContent = on ? '⏸ Pausa' : '▶ Jugar';
     playBtn.classList.toggle('is-running', on);
   }
@@ -1249,6 +1274,26 @@
       b.addEventListener('click', () => enterLevel(i));
       box.appendChild(b);
     });
+    // Borrar progreso: pide confirmación en el mismo botón (segundo toque).
+    if (st.progress.stars.some(n => n > 0)) {
+      const r = document.createElement('button');
+      r.type = 'button'; r.className = 'reset-progress';
+      r.textContent = 'Borrar progreso';
+      let armed = null;
+      r.addEventListener('click', () => {
+        if (!armed) {
+          r.textContent = '¿Seguro? Tocá de nuevo';
+          r.classList.add('confirm');
+          armed = setTimeout(() => { armed = null; r.textContent = 'Borrar progreso'; r.classList.remove('confirm'); }, 3000);
+          return;
+        }
+        clearTimeout(armed);
+        st.progress = { stars: [] };
+        saveProgress();
+        enterLevel(0);
+      });
+      box.appendChild(r);
+    }
   }
 
   function renderModeUI() {
