@@ -1,0 +1,9 @@
+# Sistema operativo y editores
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Código del simulador privado: nunca va a este repo (será público)
+*.py

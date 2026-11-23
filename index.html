@@ -1,0 +1,1412 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Engranajes y semáforos</title>
+<meta name="description" content="Demo jugable: cada semáforo es un engranaje y cada diente un segundo de luz. Superá los desafíos y armá una onda verde.">
+<meta property="og:title" content="La onda verde, con engranajes">
+<meta property="og:description" content="Cada semáforo es un engranaje y cada diente un segundo de luz. ¿Llegás al nivel 6?">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b1120;
+    --surface: #111a2e;
+    --surface-2: #16213a;
+    --border: #25324e;
+    --text: #e6edf7;
+    --muted: #93a3bc;
+    --green: #22c55e;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --indigo: #818cf8;
+    --gold: #facc15;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background:
+      radial-gradient(900px 500px at 10% -10%, rgba(99, 102, 241, .22), transparent 60%),
+      radial-gradient(700px 400px at 100% 0%, rgba(34, 197, 94, .10), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font: 15px/1.55 "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding-inline: 20px; }
+  [hidden] { display: none !important; }
+
+  /* ---------- Encabezado ---------- */
+  .hero { padding-block: 44px 22px; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+    color: #c7d2fe; background: rgba(129, 140, 248, .12); border: 1px solid rgba(129, 140, 248, .3);
+    padding: 5px 12px 5px 10px; border-radius: 999px;
+  }
+  .eyebrow .dots { display: inline-flex; gap: 4px; }
+  .eyebrow .dots i { width: 7px; height: 7px; border-radius: 50%; display: block; }
+  h1 {
+    font-family: "Space Grotesk", "Inter", system-ui, sans-serif;
+    font-size: clamp(30px, 5.4vw, 52px); line-height: 1.04; letter-spacing: -.02em;
+    margin: 16px 0 12px;
+  }
+  h1 .grad {
+    background: linear-gradient(90deg, var(--green), var(--yellow) 55%, var(--red));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .lead { max-width: 680px; color: var(--muted); font-size: 17px; margin: 0; }
+  .lead b { color: var(--text); font-weight: 600; }
+
+  /* ---------- Bloque del simulador ---------- */
+  .sim {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+    padding: 14px; box-shadow: 0 20px 60px rgba(0, 0, 0, .35);
+  }
+  .modebar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .tabs { display: inline-flex; padding: 4px; gap: 4px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; }
+  .tab {
+    font: inherit; font-weight: 600; font-size: 14px; border: 0; background: transparent; color: var(--muted);
+    padding: 7px 14px; border-radius: 9px; cursor: pointer;
+  }
+  .tab:hover { color: var(--text); }
+  .tab[aria-selected="true"] { background: #2a3963; color: #fff; }
+  .levels { display: flex; flex-wrap: wrap; gap: 6px; }
+  .lvl {
+    font: inherit; display: inline-flex; flex-direction: column; align-items: center; gap: 0;
+    min-width: 46px; padding: 4px 8px 3px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--surface-2); color: var(--text); cursor: pointer; font-weight: 700; font-size: 14px; line-height: 1.25;
+  }
+  .lvl small { font-size: 10px; letter-spacing: 1px; color: var(--gold); min-height: 12px; }
+  .lvl small .off { color: #3a4866; }
+  .lvl:hover:not(:disabled) { border-color: #3a4a6e; }
+  .lvl[aria-current="true"] { border-color: var(--indigo); background: #1d2950; box-shadow: 0 0 0 2px rgba(129, 140, 248, .22); }
+  .lvl:disabled { opacity: .45; cursor: not-allowed; }
+
+  .objective {
+    display: grid; grid-template-columns: 1fr minmax(220px, 330px); gap: 8px 22px; align-items: center;
+    background: linear-gradient(135deg, rgba(129, 140, 248, .13), rgba(34, 197, 94, .05));
+    border: 1px solid rgba(129, 140, 248, .3); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px;
+  }
+  .obj-level { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #a5b4fc; }
+  .objective h3 { margin: 2px 0 4px; font-family: "Space Grotesk", "Inter", system-ui, sans-serif; font-size: 20px; }
+  .obj-intro { margin: 0; color: var(--muted); font-size: 14px; }
+  .obj-goal { margin: 8px 0 0; font-weight: 600; font-size: 14.5px; }
+  .obj-side { display: flex; flex-direction: column; gap: 6px; }
+  .obj-metric { font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .obj-metric .ok { color: #86efac; }
+  .obj-metric .bad { color: #fca5a5; }
+  .pbar { height: 8px; border-radius: 4px; background: #22304d; overflow: hidden; }
+  .pbar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--indigo), var(--green)); }
+  .obj-time { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .hint-btn { font: inherit; font-size: 13px; font-weight: 600; color: #c7d2fe; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
+  .hint-btn:hover { text-decoration: underline; }
+  .hint-box {
+    grid-column: 1 / -1; margin: 2px 0 0; font-size: 13.5px; color: #e0e7ff;
+    background: rgba(129, 140, 248, .1); border-radius: 10px; padding: 8px 12px;
+  }
+
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+  .toolbar .spacer { flex: 1; }
+  .btn {
+    font: inherit; font-weight: 600; font-size: 14px; color: var(--text);
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 11px;
+    padding: 8px 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
+    transition: background .15s, border-color .15s, transform .08s;
+  }
+  .btn:hover { border-color: #3a4a6e; background: #1b2846; }
+  .btn:active { transform: translateY(1px); }
+  .btn:focus-visible, .chip:focus-visible, .tab:focus-visible, .lvl:focus-visible, input[type=range]:focus-visible { outline: 2px solid var(--indigo); outline-offset: 2px; }
+  .btn.primary { background: var(--green); border-color: var(--green); color: #052e14; min-width: 112px; justify-content: center; }
+  .btn.primary:hover { background: #2fd96b; }
+  .btn.primary.is-running { background: var(--surface-2); border-color: var(--border); color: var(--text); }
+  .group {
+    display: inline-flex; align-items: center; gap: 4px; padding: 4px;
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px;
+  }
+  .group-label { font-size: 12px; color: var(--muted); padding: 0 6px 0 8px; }
+  .chip {
+    font: inherit; font-size: 13px; font-weight: 600; color: var(--muted); background: transparent;
+    border: 0; border-radius: 8px; padding: 5px 10px; cursor: pointer;
+  }
+  .chip:hover:not(:disabled) { color: var(--text); }
+  .chip:disabled { opacity: .35; cursor: not-allowed; }
+  .chip[aria-pressed="true"] { background: #2a3963; color: #fff; }
+  .count { min-width: 22px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  .scene {
+    position: relative; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); line-height: 0;
+    transition: box-shadow .35s, border-color .35s; background: #0d1628;
+  }
+  .scene.synced { border-color: rgba(34, 197, 94, .75); box-shadow: 0 0 0 3px rgba(34, 197, 94, .16), 0 0 44px rgba(34, 197, 94, .16); }
+  .scene canvas { display: block; width: 100%; }
+  .overlay {
+    position: absolute; inset: 0; display: grid; place-items: center; overflow: auto;
+    background: rgba(8, 12, 24, .62); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+    line-height: 1.5; padding: 14px;
+  }
+  .ov-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+    padding: 20px 24px; max-width: 460px; text-align: center; box-shadow: 0 20px 60px rgba(0, 0, 0, .5);
+    animation: pop .4s cubic-bezier(.2, 1.4, .4, 1);
+  }
+  .ov-stars { font-size: 34px; letter-spacing: 6px; color: var(--gold); line-height: 1.1; }
+  .ov-stars .off { color: #334155; }
+  .ov-stars span { display: inline-block; animation: pop .45s cubic-bezier(.2, 1.6, .4, 1) both; }
+  .ov-stars span:nth-child(2) { animation-delay: .12s; }
+  .ov-stars span:nth-child(3) { animation-delay: .24s; }
+  .ov-card h3 { margin: 6px 0 2px; font-family: "Space Grotesk", "Inter", system-ui, sans-serif; font-size: 24px; }
+  .ov-val { margin: 0; color: var(--muted); font-size: 14px; }
+  .ov-lesson { margin: 12px 0 0; font-size: 14px; text-align: left; background: rgba(34, 197, 94, .08); border: 1px solid rgba(34, 197, 94, .25); border-radius: 12px; padding: 10px 12px; }
+  .ov-lesson b { color: #86efac; }
+  .ov-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; }
+  @keyframes pop { from { transform: scale(.8); opacity: 0; } to { transform: none; opacity: 1; } }
+
+  .status { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; align-items: stretch; }
+  .sync-pill {
+    display: inline-flex; align-items: center; gap: 10px; flex: 1 1 260px;
+    padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: 15px;
+    background: rgba(239, 68, 68, .08); border: 1px solid rgba(239, 68, 68, .28); color: #fecaca;
+    transition: background .3s, border-color .3s, color .3s;
+  }
+  .sync-pill .led { width: 10px; height: 10px; border-radius: 50%; background: var(--red); box-shadow: 0 0 10px var(--red); flex: none; }
+  .sync-pill.on { background: rgba(34, 197, 94, .12); border-color: rgba(34, 197, 94, .45); color: #bbf7d0; }
+  .sync-pill.on .led { background: var(--green); box-shadow: 0 0 12px var(--green); }
+  .stat {
+    display: flex; flex-direction: column; justify-content: center; flex: 0 1 auto;
+    padding: 6px 16px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--border); min-width: 120px;
+  }
+  .stat .k { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .stat .v { font-weight: 700; font-size: 17px; font-variant-numeric: tabular-nums; }
+
+  /* ---------- Tarjetas de semáforos ---------- */
+  section { margin-top: 34px; }
+  .section-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; justify-content: space-between; margin-bottom: 14px; }
+  h2 { font-family: "Space Grotesk", "Inter", system-ui, sans-serif; font-size: 24px; margin: 0; letter-spacing: -.01em; }
+  .section-head p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .card {
+    position: relative; background: var(--surface); border: 1px solid var(--border);
+    border-top: 3px solid var(--accent); border-radius: 16px; padding: 14px 16px 16px;
+  }
+  .card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .card-head h3 { margin: 0; font-size: 15px; font-weight: 700; flex: 1; }
+  .badge-num {
+    width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--accent); color: #0b1120; font-weight: 800; font-size: 13px; flex: none;
+  }
+  .live { width: 12px; height: 12px; border-radius: 50%; background: #334155; flex: none; transition: background .12s, box-shadow .12s; }
+  .live[data-c="G"] { background: var(--green); box-shadow: 0 0 10px var(--green); }
+  .live[data-c="Y"] { background: var(--yellow); box-shadow: 0 0 10px var(--yellow); }
+  .live[data-c="R"] { background: var(--red); box-shadow: 0 0 10px var(--red); }
+  .remove {
+    font: inherit; width: 26px; height: 26px; border-radius: 8px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); cursor: pointer; font-size: 16px; line-height: 1;
+  }
+  .remove:hover { color: #fecaca; border-color: rgba(239, 68, 68, .5); }
+  .field { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 8px; margin-top: 8px; }
+  .field span { font-size: 13px; color: var(--muted); }
+  .field span i { font-style: normal; display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: 1px; }
+  .field span small { color: #6f809c; font-size: 11.5px; margin-left: 4px; }
+  .field output { font-weight: 700; font-size: 14px; font-variant-numeric: tabular-nums; }
+  .field input { grid-column: 1 / -1; width: 100%; margin: 4px 0 0; accent-color: var(--accent); cursor: pointer; }
+  .field.locked input { opacity: .3; cursor: not-allowed; }
+  .field.locked output::before { content: "🔒 "; font-size: 11px; }
+  .card.editable { box-shadow: 0 0 0 1px rgba(129, 140, 248, .35); }
+  .hint { font-size: 12px; color: #6f809c; margin: 2px 0 0; }
+  .cycle { margin-top: 14px; }
+  .bar { position: relative; height: 12px; }
+  .bar-track { display: flex; height: 100%; border-radius: 6px; overflow: hidden; }
+  .bar-track b { display: block; height: 100%; }
+  .playhead {
+    position: absolute; top: -4px; bottom: -4px; width: 3px; margin-left: -1.5px; left: 0;
+    background: #fff; border-radius: 2px; box-shadow: 0 0 0 2px rgba(11, 17, 32, .7);
+  }
+  .cycle-txt { font-size: 12px; color: var(--muted); margin: 8px 0 0; }
+  .cycle-txt b { color: var(--text); }
+  .add-card {
+    border: 1.5px dashed #34446a; border-radius: 16px; background: transparent; color: var(--muted);
+    font: inherit; font-weight: 600; cursor: pointer; min-height: 200px;
+    display: grid; place-items: center; align-content: center; gap: 6px; transition: border-color .15s, color .15s, background .15s;
+  }
+  .add-card:hover { border-color: var(--indigo); color: var(--text); background: rgba(129, 140, 248, .06); }
+  .add-card .plus { font-size: 30px; line-height: 1; }
+
+  /* ---------- Cómo funciona ---------- */
+  .steps { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+  .steps li { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px; }
+  .steps .n {
+    font-family: "Space Grotesk", "Inter", system-ui, sans-serif; font-weight: 700; font-size: 13px;
+    color: #c7d2fe; background: rgba(129, 140, 248, .14); border-radius: 8px; padding: 2px 8px; display: inline-block;
+  }
+  .steps h3 { margin: 10px 0 6px; font-size: 16px; }
+  .steps p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  footer { padding-block: 40px 36px; color: #6f809c; font-size: 13px; text-align: center; }
+
+  /* ---------- Escena + panel de semáforos, siempre a la vista ---------- */
+  .stage { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 12px; align-items: start; }
+  .stage-main { min-width: 0; }
+  .panel { position: relative; align-self: stretch; min-height: 340px; }
+  /* El contenido va en absoluto: así el panel no estira la fila y toma
+     exactamente el alto de la escena; las tarjetas scrollean adentro. */
+  .panel-inner { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 10px; }
+  .panel-head { display: flex; gap: 8px; align-items: start; justify-content: space-between; }
+  .panel-head h2 { font-size: 18px; }
+  .panel-head p { margin: 2px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.4; }
+  .btn.small { font-size: 12.5px; padding: 6px 10px; white-space: nowrap; flex: none; }
+  .panel .cards {
+    flex: 1; min-height: 0; overflow-y: auto; grid-template-columns: 1fr; gap: 10px;
+    padding: 2px 4px 2px 2px; scrollbar-width: thin; scrollbar-color: #34446a transparent; align-content: start;
+  }
+  .panel .card { padding: 12px 14px 14px; }
+  .panel .add-card { min-height: 84px; }
+  .card { scroll-margin: 8px; transition: box-shadow .2s; }
+  .card.hl { box-shadow: 0 0 0 2px var(--accent); }
+  .card.flash { animation: flash 1.3s ease-out; }
+  @keyframes flash { 0%, 30% { box-shadow: 0 0 0 3px var(--accent), 0 0 24px var(--accent); } 100% { box-shadow: 0 0 0 0 transparent; } }
+
+  @media (max-width: 980px) {
+    .stage { grid-template-columns: 1fr; }
+    /* La escena queda pegada arriba mientras se scrollean las tarjetas. */
+    .stage-main { display: contents; }
+    .scene { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; box-shadow: 0 10px 30px rgba(0, 0, 0, .45); }
+    .panel { position: static; min-height: 0; margin-top: 4px; }
+    .panel-inner { position: static; }
+    .panel .cards { overflow: visible; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+  }
+  @media (max-width: 760px) {
+    .objective { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .hero { padding-block: 28px 16px; }
+    .lead { font-size: 15.5px; }
+    .toolbar .spacer { display: none; }
+    .group-label { padding: 0 2px 0 6px; }
+    .chip { padding: 5px 8px; }
+    .stat { flex: 1 1 30%; min-width: 0; padding: 6px 10px; }
+    .stat .v { font-size: 15px; }
+    .ov-card { padding: 14px 16px; }
+    .ov-stars { font-size: 26px; }
+    .ov-card h3 { font-size: 19px; }
+    .ov-lesson { font-size: 13px; margin-top: 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <span class="eyebrow"><span class="dots"><i style="background:var(--green)"></i><i style="background:var(--yellow)"></i><i style="background:var(--red)"></i></span>Demo jugable</span>
+    <h1>La onda verde, <span class="grad">con engranajes</span></h1>
+    <p class="lead">Cada semáforo es un <b>engranaje</b> y cada diente es <b>un segundo de luz</b>. Superá los desafíos para entender cómo se sincroniza una avenida, o experimentá a tu gusto en el modo libre.</p>
+  </header>
+
+  <main>
+    <div class="sim">
+      <div class="modebar">
+        <div class="tabs" role="tablist" aria-label="Modo">
+          <button class="tab" role="tab" type="button" data-mode="levels">🎯 Desafíos</button>
+          <button class="tab" role="tab" type="button" data-mode="free">🧪 Modo libre</button>
+        </div>
+        <div class="levels" id="levelPicker" aria-label="Niveles"></div>
+      </div>
+
+      <div class="objective" id="objective" hidden>
+        <div>
+          <span class="obj-level" id="objLevel"></span>
+          <h3 id="objTitle"></h3>
+          <p class="obj-intro" id="objIntro"></p>
+          <p class="obj-goal">🎯 <span id="objGoal"></span></p>
+        </div>
+        <div class="obj-side">
+          <div class="obj-metric" id="objMetric"></div>
+          <div class="pbar"><i id="objBar"></i></div>
+          <div class="obj-time" id="objTime"></div>
+          <button class="hint-btn" id="hintBtn" type="button">💡 Ver pista</button>
+        </div>
+        <p class="hint-box" id="hintBox" hidden></p>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn primary" id="play" type="button">▶ Jugar</button>
+        <button class="btn" id="restart" type="button" title="Volver al segundo 0">↺ Reiniciar</button>
+        <span class="spacer"></span>
+        <div class="group" role="group" aria-label="Velocidad de reproducción">
+          <span class="group-label">Velocidad</span>
+          <button class="chip" type="button" data-speed="1">1x</button>
+          <button class="chip" type="button" data-speed="2">2x</button>
+          <button class="chip" type="button" data-speed="5">5x</button>
+          <button class="chip" type="button" data-speed="10">10x</button>
+        </div>
+        <div class="group" role="group" aria-label="Cantidad de autos">
+          <span class="group-label">Autos</span>
+          <button class="chip" type="button" id="carsMinus" aria-label="Quitar un auto">−</button>
+          <span class="count" id="carsN">3</span>
+          <button class="chip" type="button" id="carsPlus" aria-label="Agregar un auto">+</button>
+        </div>
+      </div>
+
+      <div class="stage">
+      <div class="stage-main">
+      <div class="scene" id="scene">
+        <canvas id="cv" role="img" aria-label="Simulación: engranajes que giran, sus semáforos arriba y una calle con autos abajo"></canvas>
+        <div class="overlay" id="overlay" hidden>
+          <div class="ov-card" role="dialog" aria-live="assertive">
+            <div class="ov-stars" id="ovStars"></div>
+            <h3 id="ovTitle"></h3>
+            <p class="ov-val" id="ovVal"></p>
+            <p class="ov-lesson" id="ovLesson"></p>
+            <div class="ov-actions" id="ovActions"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="status" aria-live="polite">
+        <div class="sync-pill" id="syncPill"><span class="led"></span><span id="syncText">Esperando la onda verde…</span></div>
+        <div class="stat"><span class="k">Tiempo</span><span class="v" id="stTime">0:00</span></div>
+        <div class="stat"><span class="k">Todos en verde</span><span class="v" id="stSync">0 s · 0%</span></div>
+        <div class="stat"><span class="k" id="stStopsK">Frenadas</span><span class="v" id="stStops">0</span></div>
+      </div>
+      </div>
+
+      <aside class="panel" aria-labelledby="h-sem">
+        <div class="panel-inner">
+          <div class="panel-head">
+            <div>
+              <h2 id="h-sem">Semáforos</h2>
+              <p id="semHelp"></p>
+            </div>
+            <button class="btn small" id="share" type="button">🔗 Copiar link</button>
+          </div>
+          <div class="cards" id="cards"></div>
+        </div>
+      </aside>
+      </div>
+    </div>
+
+    <section aria-labelledby="h-how">
+      <div class="section-head"><h2 id="h-how">¿Cómo funciona?</h2></div>
+      <ol class="steps">
+        <li>
+          <span class="n">01</span>
+          <h3>Un diente, un segundo</h3>
+          <p>Cada engranaje es el ciclo completo de un semáforo. Sus dientes están pintados de verde, amarillo y rojo: uno por cada segundo de luz. Más tiempo de ciclo, engranaje más grande.</p>
+        </li>
+        <li>
+          <span class="n">02</span>
+          <h3>La flecha decide</h3>
+          <p>Arriba de cada engranaje hay una flecha fija. El diente que pasa justo debajo es el color que se prende en su semáforo. El diente blanco marca el segundo 0.</p>
+        </li>
+        <li>
+          <span class="n">03</span>
+          <h3>Sincronizar es desfasar</h3>
+          <p>Si todos los semáforos leen verde al mismo tiempo, hay onda verde. El <b>retraso</b> de cada uno es la herramienta para lograrlo: cuánto tarda en arrancar su verde.</p>
+        </li>
+      </ol>
+    </section>
+  </main>
+
+  <footer>Versión demo de un simulador de sincronización de semáforos en desarrollo.</footer>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ================= LÓGICA (port 1:1 de Gear en el simulador original) =================
+  const YELLOW_TEETH = 2;      // fijo: 1 diente amarillo antes de cada cambio de color
+  const TOP = 270;             // "las 12 en punto" (eje Y hacia abajo, como el canvas)
+  const SPEED = 1;             // dientes por segundo: 1 diente = 1 segundo
+  const mod = (a, n) => ((a % n) + n) % n;
+
+  // Color FIJO de cada diente según su índice ('G', 'Y', 'R'). El diente 0
+  // cuenta como verde (solo se pinta distinto, como marcador).
+  function toothColor(i, g) {
+    if (i === 0) return 'G';
+    const yBeforeGreen = Math.floor(g.yellow / 2);
+    const yBeforeRed = g.yellow - yBeforeGreen;
+    if (i <= yBeforeGreen) return 'Y';
+    if (i <= yBeforeGreen + g.red) return 'R';
+    if (i <= yBeforeGreen + g.red + yBeforeRed) return 'Y';
+    return 'G';
+  }
+
+  class Gear {
+    constructor(cfg, index) {
+      this.green = cfg.green; this.red = cfg.red; this.yellow = YELLOW_TEETH; this.delay = cfg.delay;
+      this.total = Math.max(1, this.green + this.yellow + this.red);
+      // Vecinos giran al revés (para engranar); los impares espejan el orden
+      // de pintado para que dos engranajes idénticos queden EN fase.
+      this.dir = index % 2 === 0 ? 1 : -1;
+      this.reverse = index % 2 === 1;
+      this.speed = (360 / this.total) * SPEED;   // grados por segundo
+      this.cycle = this.total / SPEED;            // segundos por vuelta
+      // Retraso positivo = tarda más en ponerse verde.
+      this.angle = mod(TOP + this.speed * this.dir * (-this.delay), 360);
+      this.cx = 0; this.cy = 0; this.r = 0; this.th = 0;
+    }
+    update(dt) { this.angle = mod(this.angle + this.speed * this.dir * dt, 360); }
+    // Posición continua (en dientes) bajo un ángulo fijo del mundo. Se espeja
+    // el ÁNGULO (no el índice) antes del floor: espejar el índice corre todo
+    // un diente. El +1e-9 absorbe el ruido de punto flotante en los bordes.
+    toothPos(globalAngle) {
+      let rel = mod(globalAngle - this.angle, 360);
+      if (this.reverse) rel = mod(-rel, 360);
+      return rel / (360 / this.total);
+    }
+    colorAt(globalAngle) {
+      const idx = Math.floor(this.toothPos(globalAngle) + 1e-9) % this.total;
+      return toothColor(idx, this);
+    }
+    // Segundo dentro del ciclo en orden verde → amarillo → rojo → amarillo
+    // (para la barrita de la tarjeta).
+    cyclePhase(globalAngle) { return mod(1 - this.toothPos(globalAngle), this.total) / this.total; }
+  }
+  // ================= FIN LÓGICA =================
+
+  const MIN_SEM = 2, MAX_SEM = 6, MIN_CARS = 1, MAX_CARS = 10;
+  const LIM_GREEN = [5, 90], LIM_RED = [5, 90];
+  const ACCENTS = ['#81c8ff', '#ffb482', '#c4b5fd', '#86efac', '#f9a8d4', '#5eead4'];
+  const LIGHT = { G: '#22c55e', Y: '#f59e0b', R: '#ef4444' };
+  const TOOTH_EDGE = { G: '#15803d', Y: '#b45309', R: '#b91c1c', K: '#94a3b8' };
+  const CAR_COLORS = ['#60a5fa', '#f472b6', '#a78bfa', '#22d3ee', '#fb923c', '#e2e8f0', '#818cf8', '#2dd4bf', '#c084fc', '#94a3b8'];
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const toInt = (v, d) => (v !== null && v !== undefined && String(v).trim() !== '' && Number.isFinite(Number(v)) ? Math.round(Number(v)) : d);
+  const ALL = ['green', 'red', 'delay'];
+  const TIMING = ['green', 'red'];
+
+  // ================= DESAFÍOS =================
+  // goal.type 'sync': % de segundos con todos en verde dentro de la ventana;
+  //   stars = umbrales mínimos para 1, 2 y 3 estrellas.
+  // goal.type 'stops': frenadas DESPUÉS del semáforo 1 dentro de la ventana
+  //   (frenar en el primero es inevitable); stars = máximos para 1, 2 y 3.
+  // Los verdes crecen un poco de un semáforo al siguiente a propósito: así la
+  // ventana de retrasos que funciona es de 2-3 valores enteros, no de décimas.
+  const LEVELS = [
+    {
+      title: 'Primer encuentro',
+      intro: 'Dos semáforos iguales, pero desfasados: cuando uno está en verde, el otro está en rojo.',
+      goal: { type: 'sync', window: 124, stars: [40, 45, 48] },
+      goalText: 'Lográ que estén los dos en verde a la vez al menos el 40 % del tiempo.',
+      sems: [{ green: 30, red: 30, delay: 0, lock: ALL }, { green: 30, red: 30, delay: 31, lock: TIMING }],
+      cars: 2,
+      hint: 'Solo podés mover el retraso del semáforo 2. Mirá los dientes blancos: ¿qué pasa cuando los dos quedan arriba al mismo tiempo?',
+      lesson: 'Dos semáforos con el <b>mismo ciclo</b> se coordinan solo con el desfase: sin retraso entre ellos, coinciden siempre.',
+    },
+    {
+      title: 'La onda verde',
+      intro: 'Ahora mandan los autos. Frenar en el primer semáforo es inevitable; la idea es que, una vez que arrancan, no vuelvan a frenar.',
+      goal: { type: 'stops', window: 120, stars: [2, 1, 0] },
+      goalText: 'Como mucho 2 frenadas después del semáforo 1, en 2 minutos.',
+      sems: [{ green: 25, red: 35, delay: 0, lock: ALL }, { green: 28, red: 32, delay: 40, lock: TIMING }],
+      cars: 3,
+      travel: true,
+      hint: 'Cuando el semáforo 1 se pone en verde, los autos tardan un tiempo en llegar al 2. Ese viaje es el retraso que necesita el semáforo 2. Redondeá para abajo: si el verde llega tarde, aunque sea por medio segundo, el primer auto frena.',
+      lesson: 'En una onda verde cada semáforo se prende <b>un poco después</b> que el anterior: justo lo que tarda el auto en llegar. Por eso el mejor retraso no es 0.',
+    },
+    {
+      title: 'Ritmos distintos',
+      intro: 'El semáforo 2 tiene un ciclo más largo que el 1. Con el retraso solo, no alcanza.',
+      goal: { type: 'sync', window: 372, stars: [40, 44, 48] },
+      goalText: 'Llegá al 40 % de tiempo con los dos en verde, durante 6 minutos.',
+      sems: [{ green: 30, red: 30, delay: 0, lock: ALL }, { green: 45, red: 30, delay: 0, lock: [] }],
+      cars: 2,
+      hint: 'Mirá la duración del ciclo debajo de cada tarjeta. Si no son iguales, cualquier coincidencia se va corriendo con el tiempo.',
+      lesson: 'Con ciclos distintos, toda coincidencia <b>se desarma con el tiempo</b>. Para coordinar semáforos, primero tienen que compartir el mismo ciclo.',
+    },
+    {
+      title: 'Tres en fila',
+      intro: 'Un semáforo más en la avenida, y más autos.',
+      goal: { type: 'stops', window: 180, stars: [3, 1, 0] },
+      goalText: 'Como mucho 3 frenadas después del semáforo 1, en 3 minutos.',
+      sems: [
+        { green: 25, red: 35, delay: 0, lock: ALL },
+        { green: 28, red: 32, delay: 30, lock: TIMING },
+        { green: 31, red: 29, delay: 12, lock: TIMING },
+      ],
+      cars: 5,
+      travel: true,
+      hint: 'Como en el nivel 2, pero encadenado: el semáforo 3 tiene que ir retrasado respecto del 2 lo mismo que tarda el auto en llegar del 2 al 3.',
+      lesson: 'Los desfases <b>se acumulan</b>: cada semáforo se ajusta respecto del anterior, no del primero.',
+    },
+    {
+      title: 'La otra calle',
+      intro: 'Cada cruce tiene una calle transversal que también necesita pasar: el rojo no puede bajar de 25 s.',
+      goal: { type: 'stops', window: 240, stars: [4, 2, 0] },
+      goalText: 'Como mucho 4 frenadas después del semáforo 1, en 4 minutos.',
+      sems: [
+        { green: 30, red: 30, delay: 0 },
+        { green: 40, red: 25, delay: 17 },
+        { green: 25, red: 40, delay: 50 },
+        { green: 35, red: 35, delay: 9 },
+      ],
+      minRed: 25,
+      cars: 6,
+      travel: true,
+      hint: 'Primero igualá los ciclos (verde + rojo + 2 de amarillo). Después ajustá los retrasos de izquierda a derecha, sumando los tiempos de viaje y redondeando para abajo. Si todos tienen el mismo verde no hay margen: dale un poco más de verde a cada semáforo que el anterior.',
+      lesson: 'En la realidad hay <b>restricciones</b>: la otra calle también necesita su verde. Coordinar es repartir bien el tiempo, no solo desfasar.',
+    },
+    {
+      title: 'Hora pico',
+      intro: 'Seis cruces, diez autos y la calle transversal pide al menos 20 s de rojo.',
+      goal: { type: 'stops', window: 300, stars: [8, 4, 1] },
+      goalText: 'Como mucho 8 frenadas después del semáforo 1, en 5 minutos.',
+      sems: [
+        { green: 30, red: 30, delay: 0 },
+        { green: 35, red: 25, delay: 12 },
+        { green: 40, red: 22, delay: 40 },
+        { green: 28, red: 34, delay: 5 },
+        { green: 45, red: 25, delay: 20 },
+        { green: 30, red: 40, delay: 33 },
+      ],
+      minRed: 20,
+      cars: 10,
+      travel: true,
+      hint: 'Mismo ciclo para todos, y retrasos que crecen tramo a tramo según el tiempo de viaje (redondeando para abajo). Un poco más de verde en cada semáforo da margen a la fila de autos.',
+      lesson: '¡Eso es una <b>onda verde completa</b>! Es lo que se hace en avenidas reales: un ciclo común y desfases según la distancia entre cruces.',
+    },
+  ];
+
+  function limitsFor(level) {
+    return { green: LIM_GREEN, red: [level && level.minRed ? level.minRed : LIM_RED[0], LIM_RED[1]] };
+  }
+
+  function sanitize(c, lim) {
+    lim = lim || limitsFor(null);
+    const green = clamp(toInt(c.green, 30), lim.green[0], lim.green[1]);
+    const red = clamp(toInt(c.red, 30), lim.red[0], lim.red[1]);
+    const cycle = green + red + YELLOW_TEETH;
+    return { green, red, delay: mod(toInt(c.delay, 0), cycle) };
+  }
+
+  // ================= Progreso (solo en este navegador) =================
+  const SAVE_KEY = 'engranajes-desafios-v1';
+  function loadProgress() {
+    try {
+      const p = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
+      return { stars: Array.isArray(p.stars) ? p.stars.map(n => clamp(toInt(n, 0), 0, 3)) : [] };
+    } catch (e) { return { stars: [] }; }
+  }
+  function saveProgress() {
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(st.progress)); } catch (e) { /* sin almacenamiento */ }
+  }
+  const starsOf = i => st.progress.stars[i] || 0;
+  const isUnlocked = i => i === 0 || starsOf(i - 1) > 0;
+
+  // ================= Estado =================
+  function initialFree() {
+    const cfg = { sems: [{ green: 30, red: 30, delay: 0 }, { green: 30, red: 30, delay: 20 }], cars: 3, fromUrl: false };
+    try {
+      const p = new URLSearchParams(location.search);
+      const s = p.get('s');
+      if (s) {
+        const sems = s.split('_').slice(0, MAX_SEM).map(t => {
+          const [green, red, delay] = t.split('-');
+          return sanitize({ green, red, delay });
+        });
+        if (sems.length >= MIN_SEM) { cfg.sems = sems; cfg.fromUrl = true; }
+      }
+      const a = toInt(p.get('a'), NaN);
+      if (Number.isFinite(a)) cfg.cars = clamp(a, MIN_CARS, MAX_CARS);
+    } catch (e) { /* URL rara: valores por defecto */ }
+    return cfg;
+  }
+
+  const initFree = initialFree();
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const st = {
+    mode: 'free',
+    level: 0,
+    free: { sems: initFree.sems, cars: initFree.cars },
+    progress: loadProgress(),
+    sems: initFree.sems,
+    lim: limitsFor(null),
+    locks: [],
+    gears: [],
+    running: false,
+    playback: 1,
+    time: 0,
+    stops: 0,
+    stopsAfter: 0,
+    cars: [],
+    exact: null,
+    result: null,
+  };
+  const level = () => (st.mode === 'levels' ? LEVELS[st.level] : null);
+
+  // ================= Escena (coordenadas lógicas) =================
+  const canvas = document.getElementById('cv');
+  const ctx = canvas.getContext('2d');
+  const scene = document.getElementById('scene');
+  const bg = document.createElement('canvas');
+  const bgx = bg.getContext('2d');
+  const H = 620, TOP_MARGIN = 112, BOTTOM_MARGIN = 50, ROAD = 118, SIDE = 36;
+  const LAMP_W = 30, LAMP_H = 78, LAMP_Y = 14;
+  const CAR_LEN = 46, CAR_SPEED = 70, STOP_BEFORE = 8, CAR_GAP = 12;
+  let W = 1100, scale = 1, dpr = 1;
+  const roadTop = () => H - ROAD + 30;
+  const roadBot = () => H - 12;
+  const laneY = () => (roadTop() + roadBot()) / 2 + 4;
+
+  function resize() {
+    const cssW = Math.max(1, scene.clientWidth);
+    W = Math.max(720, cssW);
+    scale = cssW / W;
+    dpr = window.devicePixelRatio || 1;
+    const cssH = H * scale;
+    canvas.style.height = cssH + 'px';
+    canvas.width = bg.width = Math.round(cssW * dpr);
+    canvas.height = bg.height = Math.round(cssH * dpr);
+    layout();
+    paintBackground();
+  }
+
+  function layout() {
+    const gs = st.gears;
+    if (!gs.length) return;
+    const availH = H - TOP_MARGIN - BOTTOM_MARGIN - ROAD;
+    const availW = W - 2 * SIDE;
+    const maxT = Math.max(...gs.map(g => g.total));
+    const sumT = gs.reduce((s, g) => s + g.total, 0);
+    const m = clamp(Math.min((availH / 2 - 4) / maxT, availW / (2 * sumT)), 0.25, 3.4);
+    gs.forEach(g => { g.r = g.total * m; g.th = 2.25 * m; });
+    // Una fila de engranajes que engranan de a pares mide 2 * suma de radios.
+    const totalW = 2 * gs.reduce((s, g) => s + g.r, 0);
+    const cy = TOP_MARGIN + availH / 2;
+    let cx = (W - totalW) / 2 + gs[0].r;
+    gs.forEach((g, i) => {
+      if (i > 0) cx += gs[i - 1].r + g.r;
+      g.cx = cx; g.cy = cy;
+    });
+  }
+
+  // Conteo EXACTO de segundos con todos en verde (muestreo por segundo entero,
+  // igual que el análisis del simulador original): no depende de los fps.
+  function makeExact() { return { gears: st.sems.map((c, i) => new Gear(c, i)), n: 0, sync: 0 }; }
+  function exactUpTo(n) {
+    const ex = st.exact;
+    while (ex.n < n) {
+      if (ex.gears.every(g => g.colorAt(TOP) === 'G')) ex.sync++;
+      ex.gears.forEach(g => g.update(1));
+      ex.n++;
+    }
+    return ex;
+  }
+
+  function rebuildGears() {
+    st.gears = st.sems.map((c, i) => new Gear(c, i));
+    st.time = 0; st.stops = 0; st.stopsAfter = 0;
+    st.exact = makeExact();
+    st.result = null;
+    hideOverlay();
+    // En los desafíos la prueba tiene que ser igual para todos: los autos
+    // también vuelven al principio. En modo libre siguen andando.
+    if (st.mode === 'levels') resetCars(st.cars.length);
+    st.cars.forEach(c => { c.stopped = false; });
+    layout();
+  }
+
+  function resetCars(n) {
+    st.cars = Array.from({ length: n }, (_, i) => ({ front: 40 - 70 * i, color: CAR_COLORS[i % CAR_COLORS.length], stopped: false }));
+  }
+
+  // ================= Autos (onda verde) =================
+  function updateCars(colors, dt) {
+    if (dt <= 0) return;
+    const lines = st.gears.map((g, i) => ({ x: g.cx, c: colors[i] })).sort((a, b) => a.x - b.x);
+    const firstLine = lines.length ? lines[0].x : 0;
+    const order = st.cars.slice().sort((a, b) => b.front - a.front);
+    let ahead = null;
+    for (const car of order) {
+      const f = car.front;
+      let target = f + CAR_SPEED * dt;
+      // Frena antes de la primera línea en rojo/amarillo que tenga por delante
+      // (si ya la pisó, la cruza: como quien pasa en amarillo).
+      for (const l of lines) {
+        if (l.x - STOP_BEFORE >= f - 0.5 && l.c !== 'G') { target = Math.min(target, l.x - STOP_BEFORE); break; }
+      }
+      // ...y antes de chocar al de adelante.
+      if (ahead !== null) target = Math.min(target, ahead - CAR_LEN - CAR_GAP);
+      target = Math.max(target, f);
+      const stoppedNow = target - f < CAR_SPEED * dt * 0.15;
+      if (stoppedNow && !car.stopped) {
+        st.stops++;
+        if (f > firstLine + 1) st.stopsAfter++;   // ya había pasado el semáforo 1
+      }
+      car.stopped = stoppedNow;
+      if (target > W + CAR_LEN + 20) {
+        // Sale por la derecha y vuelve a entrar por la izquierda, detrás del último.
+        const rear = Math.min(...st.cars.map(c => c.front));
+        car.front = Math.min(-10, rear - CAR_LEN - 24);
+        car.stopped = false;
+      } else {
+        car.front = target;
+        ahead = target;
+      }
+    }
+  }
+
+  function travelTimes() {
+    const gs = st.gears;
+    const out = [];
+    for (let i = 0; i + 1 < gs.length; i++) out.push(`S${i + 1}→S${i + 2}: ${((gs[i + 1].cx - gs[i].cx) / CAR_SPEED).toFixed(1)} s`);
+    return out.join(' · ');
+  }
+
+  // ================= Dibujo =================
+  const DEG = Math.PI / 180, TAU = Math.PI * 2;
+
+  function rr(c, x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    c.beginPath();
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
+  }
+
+  function paintBackground() {
+    const c = bgx;
+    c.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+    const grad = c.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, '#111c33');
+    grad.addColorStop(1, '#0c1527');
+    c.fillStyle = grad;
+    c.fillRect(0, 0, W, H);
+    c.fillStyle = 'rgba(148, 163, 184, 0.09)';
+    for (let y = 14; y < H - ROAD; y += 26) {
+      for (let x = 14; x < W; x += 26) c.fillRect(x, y, 2, 2);
+    }
+    // Calle
+    const t = roadTop(), b = roadBot();
+    c.fillStyle = '#0a1120';
+    c.fillRect(0, H - ROAD + 10, W, ROAD - 10);
+    c.fillStyle = '#1f2a40';
+    c.fillRect(0, t, W, b - t);
+    c.fillStyle = '#2c3a57';
+    c.fillRect(0, t, W, 3);
+    c.fillRect(0, b - 3, W, 3);
+    c.strokeStyle = 'rgba(226, 232, 240, 0.35)';
+    c.lineWidth = 2;
+    c.setLineDash([18, 14]);
+    c.beginPath(); c.moveTo(0, t + 12); c.lineTo(W, t + 12); c.stroke();
+    c.setLineDash([]);
+  }
+
+  function drawGear(g, i) {
+    const acc = ACCENTS[i % ACCENTS.length];
+    const { cx, cy, r, th } = g;
+    const step = 360 / g.total, sr = step * DEG, sign = g.reverse ? -1 : 1;
+    const rIn = r - th / 2, rOut = r + th / 2;
+
+    // Cuerpo
+    ctx.beginPath(); ctx.arc(cx, cy, rIn + 0.6, 0, TAU);
+    ctx.fillStyle = '#26334f'; ctx.fill();
+
+    // Dientes (un Path2D por color: muchos menos cambios de estilo por frame)
+    const paths = { G: new Path2D(), Y: new Path2D(), R: new Path2D(), K: new Path2D() };
+    for (let k = 0; k < g.total; k++) {
+      const p = paths[k === 0 ? 'K' : toothColor(k, g)];
+      const a = (g.angle + sign * k * step) * DEG;
+      const pts = [[a - 0.4 * sr, rIn], [a - 0.2 * sr, rOut], [a + 0.2 * sr, rOut], [a + 0.4 * sr, rIn]];
+      pts.forEach(([ang, rad], j) => {
+        const x = cx + rad * Math.cos(ang), y = cy + rad * Math.sin(ang);
+        if (j === 0) p.moveTo(x, y); else p.lineTo(x, y);
+      });
+      p.closePath();
+    }
+    ctx.lineWidth = 1;
+    for (const key of ['G', 'Y', 'R', 'K']) {
+      ctx.fillStyle = key === 'K' ? '#f8fafc' : LIGHT[key];
+      ctx.strokeStyle = TOOTH_EDGE[key];
+      ctx.fill(paths[key]); ctx.stroke(paths[key]);
+    }
+
+    // Masa central, con agujeros que giran (para que se note el giro)
+    const hubR = rIn - Math.max(th * 0.8, 3);
+    if (hubR > 6) {
+      ctx.beginPath(); ctx.arc(cx, cy, hubR, 0, TAU);
+      const hg = ctx.createRadialGradient(cx - hubR * 0.3, cy - hubR * 0.35, hubR * 0.1, cx, cy, hubR);
+      hg.addColorStop(0, '#34446a'); hg.addColorStop(1, '#1d2944');
+      ctx.fillStyle = hg; ctx.fill();
+      ctx.lineWidth = 2.5; ctx.strokeStyle = acc; ctx.stroke();
+      if (hubR > 34) {
+        ctx.fillStyle = '#0d1628';
+        for (let j = 0; j < 5; j++) {
+          const a = (g.angle + j * 72) * DEG;
+          ctx.beginPath(); ctx.arc(cx + hubR * 0.58 * Math.cos(a), cy + hubR * 0.58 * Math.sin(a), hubR * 0.17, 0, TAU); ctx.fill();
+        }
+      }
+      const cr = clamp(hubR * 0.22, 7, 16);
+      ctx.beginPath(); ctx.arc(cx, cy, cr, 0, TAU);
+      ctx.fillStyle = acc; ctx.fill();
+      if (cr >= 10) {
+        ctx.fillStyle = '#0b1120';
+        ctx.font = `800 ${Math.round(cr * 1.05)}px Inter, system-ui, sans-serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(String(i + 1), cx, cy + 0.5);
+      }
+    }
+  }
+
+  function drawSensor(g, c, pulse) {
+    const rOut = g.r + g.th / 2;
+    const tip = g.cy - rOut - (7 + 4 * pulse);
+    const s = 8;
+    ctx.setLineDash([3, 4]);
+    ctx.strokeStyle = '#4b5a78'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(g.cx, tip - s * 1.6); ctx.lineTo(g.cx, LAMP_Y + LAMP_H); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(g.cx - s, tip - s * 1.6); ctx.lineTo(g.cx + s, tip - s * 1.6); ctx.lineTo(g.cx, tip); ctx.closePath();
+    ctx.fillStyle = LIGHT[c]; ctx.fill();
+    ctx.strokeStyle = TOOTH_EDGE[c]; ctx.lineWidth = 1.5; ctx.stroke();
+  }
+
+  function drawLamp(x, c, acc) {
+    const y = LAMP_Y;
+    rr(ctx, x - LAMP_W / 2, y, LAMP_W, LAMP_H, 10);
+    ctx.fillStyle = '#1b2539'; ctx.fill();
+    ctx.lineWidth = 1.5; ctx.strokeStyle = acc; ctx.stroke();
+    ['R', 'Y', 'G'].forEach((k, j) => {
+      const ly = y + 14 + j * 25;
+      ctx.beginPath(); ctx.arc(x, ly, 8, 0, TAU);
+      if (k === c) {
+        ctx.save(); ctx.shadowColor = LIGHT[k]; ctx.shadowBlur = 16;
+        ctx.fillStyle = LIGHT[k]; ctx.fill(); ctx.restore();
+      } else {
+        ctx.fillStyle = 'rgba(255,255,255,0.07)'; ctx.fill();
+      }
+    });
+  }
+
+  function drawBadge(g, i) {
+    const y = g.cy + g.r + g.th / 2 + 10;
+    // Con muchos engranajes chicos las etiquetas se pisarían: se achican
+    // según la distancia al vecino más cercano.
+    const gs = st.gears;
+    const gapL = i > 0 ? g.cx - gs[i - 1].cx : Infinity;
+    const gapR = i < gs.length - 1 ? gs[i + 1].cx - g.cx : Infinity;
+    const w = clamp(Math.min(gapL, gapR) - 8, 40, 104), h = 24;
+    rr(ctx, g.cx - w / 2, y, w, h, 12);
+    ctx.fillStyle = '#16213a'; ctx.fill();
+    ctx.lineWidth = 1.2; ctx.strokeStyle = ACCENTS[i % ACCENTS.length]; ctx.stroke();
+    ctx.fillStyle = '#e6edf7';
+    ctx.font = '600 12px Inter, system-ui, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const turns = (st.time / g.cycle).toFixed(1);
+    ctx.fillText(w >= 96 ? `${turns} vueltas` : turns, g.cx, y + h / 2 + 0.5);
+    // Guía hasta su línea de "pare" en la calle
+    ctx.setLineDash([2, 6]);
+    ctx.strokeStyle = 'rgba(148,163,184,0.25)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(g.cx, y + h + 2); ctx.lineTo(g.cx, roadTop() - 2); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  function drawStopLine(x, c) {
+    const t = roadTop(), b = roadBot();
+    ctx.save();
+    ctx.shadowColor = LIGHT[c]; ctx.shadowBlur = 12;
+    ctx.fillStyle = LIGHT[c];
+    ctx.fillRect(x - 3, t + 4, 6, b - t - 8);
+    ctx.restore();
+  }
+
+  function drawCar(car) {
+    const x = car.front - CAR_LEN, y = laneY();
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    rr(ctx, x + 2, y + 6, CAR_LEN - 2, 6, 3); ctx.fill();
+    rr(ctx, x, y - 9, CAR_LEN, 16, 6);
+    ctx.fillStyle = car.color; ctx.fill();
+    rr(ctx, x + 11, y - 19, 23, 12, 5); ctx.fill();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.55)';
+    rr(ctx, x + 14, y - 16, 8, 7, 2); ctx.fill();
+    rr(ctx, x + 24, y - 16, 7, 7, 2); ctx.fill();
+    ctx.fillStyle = '#fde68a';
+    ctx.fillRect(x + CAR_LEN - 3, y - 6, 3, 4);
+    if (car.stopped) { ctx.fillStyle = '#f87171'; ctx.fillRect(x, y - 6, 3, 4); }
+    ctx.fillStyle = '#0b1120';
+    ctx.beginPath(); ctx.arc(x + 11, y + 7, 5, 0, TAU); ctx.arc(x + 35, y + 7, 5, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#64748b';
+    ctx.beginPath(); ctx.arc(x + 11, y + 7, 2, 0, TAU); ctx.arc(x + 35, y + 7, 2, 0, TAU); ctx.fill();
+  }
+
+  function draw(colors) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(bg, 0, 0);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+    const pulse = st.running ? Math.abs(Math.sin(st.time * 3)) : 0;
+    const hg = st.gears[st.hl];
+    if (hg) {
+      ctx.save();
+      ctx.shadowColor = ACCENTS[st.hl % ACCENTS.length]; ctx.shadowBlur = 24;
+      ctx.strokeStyle = ACCENTS[st.hl % ACCENTS.length]; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(hg.cx, hg.cy, hg.r + hg.th / 2 + 7, 0, TAU); ctx.stroke();
+      ctx.restore();
+    }
+    st.gears.forEach((g, i) => drawBadge(g, i));
+    st.gears.forEach((g, i) => drawGear(g, i));
+    st.gears.forEach((g, i) => drawSensor(g, colors[i], pulse));
+    st.gears.forEach((g, i) => drawLamp(g.cx, colors[i], ACCENTS[i % ACCENTS.length]));
+    st.gears.forEach((g, i) => drawStopLine(g.cx, colors[i]));
+    st.cars.forEach(drawCar);
+  }
+
+  // ================= Interfaz =================
+  const $ = id => document.getElementById(id);
+  const playBtn = $('play'), cardsEl = $('cards');
+  const hud = { pill: $('syncPill'), text: $('syncText'), time: $('stTime'), sync: $('stSync'), stops: $('stStops'), stopsK: $('stStopsK') };
+  const obj = { box: $('objective'), level: $('objLevel'), title: $('objTitle'), intro: $('objIntro'), goal: $('objGoal'), metric: $('objMetric'), bar: $('objBar'), time: $('objTime'), hintBtn: $('hintBtn'), hint: $('hintBox') };
+  const ov = { box: $('overlay'), stars: $('ovStars'), title: $('ovTitle'), val: $('ovVal'), lesson: $('ovLesson'), actions: $('ovActions') };
+  let cardRefs = [];
+  const lastHud = {};
+
+  function setText(el, key, value, html) {
+    if (lastHud[key] !== value) { if (html) el.innerHTML = value; else el.textContent = value; lastHud[key] = value; }
+  }
+
+  function fmtTime(s) {
+    const m = Math.floor(s / 60), r = Math.floor(s % 60);
+    return `${m}:${String(r).padStart(2, '0')}`;
+  }
+
+  const starsHTML = n => [0, 1, 2].map(i => `<span class="${i < n ? '' : 'off'}">★</span>`).join('');
+
+  function updateHud(colors, synced) {
+    setText(hud.time, 'time', fmtTime(st.time));
+    const ex = exactUpTo(Math.floor(st.time));
+    const pct = ex.n > 0 ? Math.round((ex.sync / ex.n) * 100) : 0;
+    setText(hud.sync, 'sync', `${ex.sync} s · ${pct}%`);
+    const L = level();
+    const afterOnly = L && L.goal.type === 'stops';
+    setText(hud.stopsK, 'stopsK', afterOnly ? 'Frenadas tras S1' : 'Frenadas');
+    setText(hud.stops, 'stops', String(afterOnly ? st.stopsAfter : st.stops));
+    if (lastHud.synced !== synced) {
+      lastHud.synced = synced;
+      hud.pill.classList.toggle('on', synced);
+      scene.classList.toggle('synced', synced);
+      hud.text.textContent = synced ? '¡Todos en verde! Onda verde en marcha' : 'Esperando la onda verde…';
+    }
+    cardRefs.forEach((ref, i) => {
+      const g = st.gears[i];
+      if (!g) return;
+      if (ref.live.dataset.c !== colors[i]) ref.live.dataset.c = colors[i];
+      ref.playhead.style.left = (g.cyclePhase(TOP) * 100).toFixed(2) + '%';
+    });
+    if (L) updateObjective(L);
+  }
+
+  // ---------- Desafíos: evaluación ----------
+  function syncPct(L) {
+    const n = Math.min(Math.floor(st.time), L.goal.window);
+    const ex = exactUpTo(n);
+    return n > 0 ? (ex.sync / n) * 100 : 0;
+  }
+
+  function starsFor(L, value) {
+    const s = L.goal.stars;
+    if (L.goal.type === 'sync') return s.filter(t => value >= t).length;
+    return s.filter(t => value <= t).length;
+  }
+
+  function evaluateLevel() {
+    const L = level();
+    if (!L || st.result) return;
+    const g = L.goal;
+    if (g.type === 'stops' && st.stopsAfter > g.stars[0]) return finish(L, false, st.stopsAfter);
+    if (st.time < g.window) return;
+    const value = g.type === 'sync' ? syncPct(L) : st.stopsAfter;
+    const stars = starsFor(L, value);
+    finish(L, stars > 0, value, stars);
+  }
+
+  function finish(L, win, value, stars = 0) {
+    st.result = { win, value, stars };
+    setRunning(false);
+    const i = st.level;
+    if (win && stars > starsOf(i)) { st.progress.stars[i] = stars; saveProgress(); renderPicker(); }
+    const g = L.goal;
+    const valTxt = g.type === 'sync'
+      ? `Todos en verde: ${value.toFixed(1)} % (meta: ${g.stars[0]} %)`
+      : `Frenadas después del semáforo 1: ${value} (máximo: ${g.stars[0]})`;
+    ov.stars.innerHTML = win ? starsHTML(stars) : '';
+    ov.title.textContent = win ? (stars === 3 ? '¡Perfecto!' : '¡Nivel superado!') : (g.type === 'stops' && st.time < g.window ? 'Demasiadas frenadas' : 'Casi…');
+    ov.val.textContent = valTxt;
+    ov.lesson.innerHTML = win ? `💡 ${L.lesson}` : 'Ajustá los controles y probá de nuevo. Si te trabás, abrí la pista.';
+    ov.lesson.hidden = false;
+    ov.actions.innerHTML = '';
+    const mk = (label, cls, fn) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'btn' + (cls ? ' ' + cls : ''); b.textContent = label;
+      b.addEventListener('click', fn); ov.actions.appendChild(b); return b;
+    };
+    if (win) {
+      if (stars < 3) mk('↺ Ir por más estrellas', '', () => { rebuildGears(); setRunning(true); });
+      if (i + 1 < LEVELS.length) mk('Siguiente nivel →', 'primary', () => enterLevel(i + 1)).focus();
+      else {
+        ov.val.textContent = valTxt + ' · ¡Completaste todos los desafíos! 🎉';
+        mk('🧪 Ir al modo libre', 'primary', () => enterFree()).focus();
+      }
+    } else {
+      mk('↺ Reintentar', 'primary', () => { rebuildGears(); setRunning(true); }).focus();
+    }
+    ov.box.hidden = false;
+  }
+
+  function hideOverlay() { ov.box.hidden = true; }
+
+  function updateObjective(L) {
+    const g = L.goal;
+    const t = Math.min(st.time, g.window);
+    obj.bar.style.width = ((t / g.window) * 100).toFixed(1) + '%';
+    setText(obj.time, 'objTime', `Prueba: ${Math.floor(t)} de ${g.window} s${st.running ? '' : st.result ? '' : ' · en pausa'}`);
+    let metric;
+    if (g.type === 'sync') {
+      const p = syncPct(L);
+      metric = `Todos en verde: <span class="${p >= g.stars[0] ? 'ok' : 'bad'}">${st.time >= 1 ? p.toFixed(0) : '–'} %</span> · meta ≥ ${g.stars[0]} %`;
+    } else {
+      metric = `Frenadas tras S1: <span class="${st.stopsAfter <= g.stars[0] ? 'ok' : 'bad'}">${st.stopsAfter}</span> · máximo ${g.stars[0]}`;
+    }
+    setText(obj.metric, 'objMetric', metric, true);
+    if (!obj.hint.hidden && L.travel) setText(obj.hint, 'hint', hintHTML(L), true);
+  }
+
+  function hintHTML(L) {
+    return L.hint + (L.travel ? `<br><b>Tiempo de viaje de un auto:</b> ${travelTimes()}` : '');
+  }
+
+  // ---------- Controles generales ----------
+  function setRunning(on) {
+    if (on && st.result) rebuildGears();   // tras ganar/perder, Jugar arranca una prueba nueva
+    st.running = on;
+    playBtn.textContent = on ? '⏸ Pausa' : '▶ Jugar';
+    playBtn.classList.toggle('is-running', on);
+  }
+
+  function setPlayback(x) {
+    st.playback = x;
+    document.querySelectorAll('[data-speed]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.speed) === x)));
+  }
+
+  function setCars(n) {
+    n = clamp(n, MIN_CARS, MAX_CARS);
+    while (st.cars.length < n) {
+      const rear = st.cars.length ? Math.min(...st.cars.map(c => c.front)) : 40 + 70;
+      st.cars.push({ front: Math.min(rear - 70, -10), color: CAR_COLORS[st.cars.length % CAR_COLORS.length], stopped: false });
+    }
+    while (st.cars.length > n) {
+      let iMin = 0;
+      st.cars.forEach((c, i) => { if (c.front < st.cars[iMin].front) iMin = i; });
+      st.cars.splice(iMin, 1);
+    }
+    if (st.mode === 'free') st.free.cars = n;
+    refreshCarsUI();
+    scheduleUrl();
+  }
+
+  function refreshCarsUI() {
+    const n = st.cars.length, free = st.mode === 'free';
+    $('carsN').textContent = String(n);
+    $('carsMinus').disabled = !free || n <= MIN_CARS;
+    $('carsPlus').disabled = !free || n >= MAX_CARS;
+  }
+
+  function cycleOf(c) { return c.green + c.red + YELLOW_TEETH; }
+
+  function fieldHTML(key, label, swatch, min, max, value, locked, note) {
+    return `<label class="field${locked ? ' locked' : ''}">
+      <span>${swatch ? `<i style="background:${swatch}"></i>` : ''}${label}${note ? `<small>${note}</small>` : ''}</span>
+      <output data-out="${key}">${value} s</output>
+      <input type="range" data-key="${key}" min="${min}" max="${max}" step="1" value="${value}" aria-label="${label}"${locked ? ' disabled' : ''}>
+    </label>`;
+  }
+
+  function renderCards() {
+    cardsEl.innerHTML = '';
+    cardRefs = [];
+    const free = st.mode === 'free';
+    st.sems.forEach((c, i) => {
+      const lock = st.locks[i] || new Set();
+      const card = document.createElement('div');
+      card.className = 'card' + (!free && lock.size < 3 ? ' editable' : '');
+      card.style.setProperty('--accent', ACCENTS[i % ACCENTS.length]);
+      const redNote = st.lim.red[0] > LIM_RED[0] ? `mín. ${st.lim.red[0]}` : '';
+      card.innerHTML = `
+        <div class="card-head">
+          <span class="badge-num">${i + 1}</span>
+          <h3>Semáforo ${i + 1}</h3>
+          <span class="live" title="Luz actual"></span>
+          ${free && st.sems.length > MIN_SEM ? `<button class="remove" type="button" aria-label="Quitar semáforo ${i + 1}" title="Quitar">×</button>` : ''}
+        </div>
+        ${fieldHTML('green', 'Verde', LIGHT.G, st.lim.green[0], st.lim.green[1], c.green, lock.has('green'))}
+        ${fieldHTML('red', 'Rojo', LIGHT.R, st.lim.red[0], st.lim.red[1], c.red, lock.has('red'), redNote)}
+        ${fieldHTML('delay', 'Retraso', null, 0, cycleOf(c) - 1, c.delay, lock.has('delay'))}
+        ${lock.has('delay') ? '' : '<p class="hint">Cuánto tarda en arrancar su verde.</p>'}
+        <div class="cycle">
+          <div class="bar"><div class="bar-track"></div><span class="playhead"></span></div>
+          <p class="cycle-txt"></p>
+        </div>`;
+      const ref = {
+        card,
+        live: card.querySelector('.live'),
+        playhead: card.querySelector('.playhead'),
+        track: card.querySelector('.bar-track'),
+        txt: card.querySelector('.cycle-txt'),
+        delayInput: card.querySelector('[data-key="delay"]'),
+      };
+      card.querySelectorAll('input[type=range]').forEach(inp => {
+        inp.addEventListener('input', () => {
+          const key = inp.dataset.key;
+          const next = { ...st.sems[i], [key]: Number(inp.value) };
+          if (key !== 'delay') next.delay = Math.min(next.delay, cycleOf(next) - 1);
+          st.sems[i] = sanitize(next, st.lim);
+          refreshCard(i);
+          rebuildGears();
+          scheduleUrl();
+        });
+      });
+      const rm = card.querySelector('.remove');
+      if (rm) rm.addEventListener('click', () => {
+        if (st.sems.length <= MIN_SEM) return;
+        st.sems.splice(i, 1);
+        renderCards(); rebuildGears(); scheduleUrl();
+      });
+      // Pasar por una tarjeta ilumina su engranaje en la escena.
+      const hlOn = () => { st.hl = i; card.classList.add('hl'); };
+      const hlOff = () => { if (st.hl === i) st.hl = -1; card.classList.remove('hl'); };
+      card.addEventListener('pointerenter', hlOn);
+      card.addEventListener('pointerleave', hlOff);
+      card.addEventListener('focusin', hlOn);
+      card.addEventListener('focusout', hlOff);
+      cardsEl.appendChild(card);
+      cardRefs.push(ref);
+      refreshCard(i);
+    });
+    st.hl = -1;
+
+    if (free && st.sems.length < MAX_SEM) {
+      const add = document.createElement('button');
+      add.type = 'button';
+      add.className = 'add-card';
+      add.innerHTML = '<span class="plus">+</span><span>Agregar semáforo</span>';
+      add.addEventListener('click', () => {
+        if (st.sems.length >= MAX_SEM) return;
+        st.sems.push({ green: 30, red: 30, delay: 0 });
+        renderCards(); rebuildGears(); scheduleUrl();
+      });
+      cardsEl.appendChild(add);
+    }
+  }
+
+  function refreshCard(i) {
+    const c = st.sems[i], ref = cardRefs[i];
+    const total = cycleOf(c);
+    ref.card.querySelectorAll('output').forEach(o => { o.textContent = `${c[o.dataset.out]} s`; });
+    ref.delayInput.max = String(total - 1);
+    ref.delayInput.value = String(c.delay);
+    const seg = (n, col) => `<b style="width:${(n / total) * 100}%;background:${col}"></b>`;
+    ref.track.innerHTML = seg(c.green, LIGHT.G) + seg(1, LIGHT.Y) + seg(c.red, LIGHT.R) + seg(1, LIGHT.Y);
+    ref.txt.innerHTML = `Ciclo de <b>${total} s</b> · ${c.green} verde · 2 amarillo · ${c.red} rojo`;
+  }
+
+  // ---------- Modos ----------
+  function renderPicker() {
+    const box = $('levelPicker');
+    box.hidden = st.mode !== 'levels';
+    box.innerHTML = '';
+    LEVELS.forEach((L, i) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'lvl';
+      const open = isUnlocked(i);
+      b.disabled = !open;
+      b.title = open ? `Nivel ${i + 1}: ${L.title}` : 'Superá el nivel anterior para desbloquearlo';
+      b.setAttribute('aria-current', String(st.mode === 'levels' && st.level === i));
+      b.innerHTML = `${open ? i + 1 : '🔒'}<small>${open ? starsHTML(starsOf(i)) : ''}</small>`;
+      b.addEventListener('click', () => enterLevel(i));
+      box.appendChild(b);
+    });
+  }
+
+  function renderModeUI() {
+    const free = st.mode === 'free';
+    document.querySelectorAll('[data-mode]').forEach(t => t.setAttribute('aria-selected', String(t.dataset.mode === st.mode)));
+    obj.box.hidden = free;
+    $('share').hidden = !free;
+    $('semHelp').textContent = free
+      ? 'Tocá un engranaje para ir a su tarjeta.'
+      : '🔒 = fijo en este desafío. Cada cambio reinicia la prueba.';
+    renderPicker();
+    refreshCarsUI();
+  }
+
+  function enterLevel(i) {
+    if (!isUnlocked(i)) return;
+    const L = LEVELS[i];
+    st.mode = 'levels';
+    st.level = i;
+    st.lim = limitsFor(L);
+    st.sems = L.sems.map(s => sanitize(s, st.lim));
+    st.locks = L.sems.map(s => new Set(s.lock || []));
+    resetCars(L.cars);
+    obj.level.textContent = `Nivel ${i + 1} de ${LEVELS.length}`;
+    obj.title.textContent = L.title;
+    obj.intro.textContent = L.intro;
+    obj.goal.textContent = L.goalText;
+    obj.hint.hidden = true;
+    obj.hintBtn.textContent = '💡 Ver pista';
+    lastHud.objMetric = lastHud.objTime = lastHud.hint = null;
+    renderModeUI();
+    renderCards();
+    rebuildGears();
+    setPlayback(2);
+    setRunning(false);
+    try { history.replaceState(null, '', location.pathname); } catch (e) { /* archivo local */ }
+  }
+
+  function enterFree() {
+    st.mode = 'free';
+    st.lim = limitsFor(null);
+    st.sems = st.free.sems;
+    st.locks = [];
+    resetCars(st.free.cars);
+    renderModeUI();
+    renderCards();
+    rebuildGears();
+    setPlayback(1);
+    setRunning(!reduceMotion);
+    scheduleUrl();
+  }
+
+  obj.hintBtn.addEventListener('click', () => {
+    const L = level();
+    if (!L) return;
+    const show = obj.hint.hidden;
+    obj.hint.hidden = !show;
+    obj.hintBtn.textContent = show ? '💡 Ocultar pista' : '💡 Ver pista';
+    lastHud.hint = null;
+    if (show) setText(obj.hint, 'hint', hintHTML(L), true);
+  });
+
+  document.querySelectorAll('[data-mode]').forEach(t => t.addEventListener('click', () => {
+    if (t.dataset.mode === st.mode) return;
+    if (t.dataset.mode === 'free') enterFree();
+    else enterLevel(firstOpenLevel());
+  }));
+
+  function firstOpenLevel() {
+    for (let i = 0; i < LEVELS.length; i++) if (isUnlocked(i) && starsOf(i) === 0) return i;
+    return 0;
+  }
+
+  // ---------- Link para compartir (modo libre) ----------
+  function configQuery() {
+    const s = st.free.sems.map(c => `${c.green}-${c.red}-${c.delay}`).join('_');
+    return `?s=${s}&a=${st.free.cars}`;
+  }
+  let urlTimer = null;
+  function scheduleUrl() {
+    if (st.mode !== 'free') return;
+    clearTimeout(urlTimer);
+    urlTimer = setTimeout(() => {
+      try { history.replaceState(null, '', configQuery()); } catch (e) { /* p. ej. abierto como archivo local */ }
+    }, 250);
+  }
+  $('share').addEventListener('click', async () => {
+    const url = location.href.split(/[?#]/)[0] + configQuery();
+    const btn = $('share'), original = '🔗 Copiar link';
+    let ok = false;
+    try { await navigator.clipboard.writeText(url); ok = true; } catch (e) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select(); ok = document.execCommand('copy'); ta.remove();
+      } catch (e2) { ok = false; }
+    }
+    btn.textContent = ok ? '✓ ¡Copiado!' : 'No se pudo copiar';
+    setTimeout(() => { btn.textContent = original; }, 2200);
+  });
+
+  // ---------- Tocar un engranaje lleva a su tarjeta ----------
+  function gearAt(ev) {
+    const rect = canvas.getBoundingClientRect();
+    const x = (ev.clientX - rect.left) / scale, y = (ev.clientY - rect.top) / scale;
+    return st.gears.findIndex(g => Math.hypot(x - g.cx, y - g.cy) <= g.r + g.th);
+  }
+  canvas.addEventListener('pointermove', ev => { canvas.style.cursor = gearAt(ev) >= 0 ? 'pointer' : 'default'; });
+  canvas.addEventListener('click', ev => {
+    const i = gearAt(ev);
+    if (i < 0 || !cardRefs[i]) return;
+    const card = cardRefs[i].card;
+    card.classList.remove('flash'); void card.offsetWidth; card.classList.add('flash');
+    if (window.matchMedia('(max-width: 980px)').matches) {
+      // La escena está pegada arriba: la tarjeta tiene que quedar justo debajo.
+      const top = card.getBoundingClientRect().top + window.scrollY - scene.offsetHeight - 12;
+      window.scrollTo({ top, behavior: 'smooth' });
+    } else {
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  });
+
+  // ---------- Botones ----------
+  playBtn.addEventListener('click', () => setRunning(!st.running));
+  $('restart').addEventListener('click', () => {
+    rebuildGears();
+    resetCars(st.cars.length);
+  });
+  document.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click', () => setPlayback(Number(b.dataset.speed))));
+  $('carsMinus').addEventListener('click', () => setCars(st.cars.length - 1));
+  $('carsPlus').addEventListener('click', () => setCars(st.cars.length + 1));
+  document.addEventListener('keydown', e => {
+    if (e.code !== 'Space') return;
+    const tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'button' || tag === 'input' || tag === 'textarea') return;
+    e.preventDefault();
+    setRunning(!st.running);
+  });
+
+  // ================= Loop =================
+  // step() es la simulación sin dibujo (también la usan las pruebas).
+  function step(dt) {
+    if (dt > 0) {
+      st.gears.forEach(g => g.update(dt));
+      st.time += dt;
+    }
+    const colors = st.gears.map(g => g.colorAt(TOP));
+    updateCars(colors, dt);
+    evaluateLevel();
+    return colors;
+  }
+
+  let last = performance.now();
+  function frame(now) {
+    const realDt = Math.min((now - last) / 1000, 0.25);
+    last = now;
+    const colors = step(st.running ? realDt * st.playback : 0);
+    const synced = colors.every(c => c === 'G');
+    draw(colors);
+    updateHud(colors, synced);
+    requestAnimationFrame(frame);
+  }
+
+  // ================= Arranque =================
+  resize();
+  if (initFree.fromUrl) enterFree();
+  else enterLevel(firstOpenLevel());
+  resize();
+  if ('ResizeObserver' in window) new ResizeObserver(resize).observe(scene);
+  else window.addEventListener('resize', resize);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => draw(st.gears.map(g => g.colorAt(TOP))));
+  requestAnimationFrame(frame);
+
+  // Para pruebas desde la consola
+  window.__sim = { Gear, toothColor, st, TOP, LEVELS, step, enterLevel, enterFree, rebuildGears, setRunning, travelTimes };
+})();
+</script>
+</body>
+</html>
